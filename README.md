@@ -1,87 +1,105 @@
-# NN-with-math-and-numpy
+# 🧠 Neural Networks from Scratch with Math & NumPy
 
-## Forward Propagation:
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![NumPy](https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org/)
+[![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white)](https://jupyter.org/)
 
-### Linear Transformation for the Hidden Layer:
+> **Understanding Neural Networks at the Mathematical Level**  
+> A deep dive into neural network fundamentals, implementing forward and backward propagation from scratch using only NumPy and mathematical equations.
 
-$Z^{[1]} = W^{[1]} X + b^{[1]}$
-$W^{[1]}$: Weight matrix of shape (10, 784)
-$X$: Input matrix of shape (784, m) where $m$ is the number of examples
-$b^{[1]}$: Bias vector of shape (10, 1)
-$Z^{[1]}$: Matrix of shape (10, m) containing the linear transformations for the hidden layer
-### Activation of the Hidden Layer:
+---
 
-$A^{[1]} = g_{\text{ReLU}}(Z^{[1]})$
-$g_{\text{ReLU}}$: ReLU activation function applied element-wise to $Z^{[1]}$
-$A^{[1]}$: Matrix of shape (10, m) containing the activations of the hidden layer
-### Linear Transformation for the Output Layer:
+## 📊 Project Overview
 
-$Z^{[2]} = W^{[2]} A^{[1]} + b^{[2]}$
-$W^{[2]}$: Weight matrix of shape (10, 10)
-$A^{[1]}$: Matrix of shape (10, m)
-$b^{[2]}$: Bias vector of shape (10, 1)
-$Z^{[2]}$: Matrix of shape (10, m) containing the linear transformations for the output layer
-### Activation of the Output Layer:
+This project provides a **comprehensive mathematical and practical understanding** of neural networks by implementing them from scratch. No high-level frameworks—just **pure NumPy** and **mathematical equations**.
 
-$A^{[2]} = g_{\text{softmax}}(Z^{[2]})$
-$g_{\text{softmax}}$: Softmax activation function applied element-wise to $Z^{[2]}$
-$A^{[2]}$: Matrix of shape (10, m) containing the probabilities for each class
-## Backward Propagation:
+### Learning Objectives
+- 🎯 Understand the math behind neural networks
+- 📝 Implement forward propagation manually
+- 🔄 Derive and code backpropagation
+- 🧮 Master gradient descent optimization
 
-### Gradient Calculation for the Output Layer:
+---
 
-$dZ^{[2]} = A^{[2]} - Y$
-$Y$: One-hot encoded labels of shape (10, m)
-$dZ^{[2]}$: Matrix of shape (10, m) containing the gradients of the output layer activations with respect to $Z^{[2]}$
-### Gradient Calculation for the Output Layer Parameters:
+## 🛠️ Tech Stack
 
-$dW^{[2]} = \frac{1}{m} dZ^{[2]} A^{[1]T}$
-$dW^{[2]}$: Gradient of the weight matrix $W^{[2]}$ of shape (10, 10)
-$A^{[1]T}$: Transpose of $A^{[1]}$ of shape (m, 10)
-$db^{[2]} = \frac{1}{m} \sum dZ^{[2]}$
-$db^{[2]}$: Gradient of the bias vector $b^{[2]}$ of shape (10, 1)
-### Gradient Calculation for the Hidden Layer:
+- **Core:** Python 3.8+, NumPy
+- **Visualization:** Matplotlib
+- **Environment:** Jupyter Notebook
 
-$dZ^{[1]} = W^{[2]T} dZ^{[2]} * g_{\text{ReLU}}'(Z^{[1]})$
-$g_{\text{ReLU}}'$: Derivative of the ReLU activation function applied element-wise to $Z^{[1]}$
-$dZ^{[1]}$: Matrix of shape (10, m) containing the gradients of the hidden layer activations with respect to $Z^{[1]}$
-### Gradient Calculation for the Hidden Layer Parameters:
+---
 
-$dW^{[1]} = \frac{1}{m} dZ^{[1]} A^{[0]T}$
-$dW^{[1]}$: Gradient of the weight matrix $W^{[1]}$ of shape (10, 784)
-$A^{[0]T}$: Transpose of the input matrix $A^{[0]} = X$ of shape (m, 784)
-$db^{[1]} = \frac{1}{m} \sum dZ^{[1]}$
-$db^{[1]}$: Gradient of the bias vector $b^{[1]}$ of shape (10, 1)
-### Parameter Updates:
+## 📐 Mathematical Foundation
 
-$W^{[2]} := W^{[2]} - \alpha dW^{[2]}$: Update the weight matrix $W^{[2]}$ for the output layer
-$b^{[2]} := b^{[2]} - \alpha db^{[2]}$: Update the bias vector $b^{[2]}$ for the output layer
-$W^{[1]} := W^{[1]} - \alpha dW^{[1]}$: Update the weight matrix $W^{[1]}$ for the hidden layer
-$b^{[1]} := b^{[1]} - \alpha db^{[1]}$: Update the bias vector $b^{[1]}$ for the hidden layer
-### Variable and Shape Summary:
+### Forward Propagation
 
-$A^{[0]} = X$: Input matrix of shape (784, m)
+#### Hidden Layer
+```
+Z[1] = W[1] · X + b[1]
+A[1] = ReLU(Z[1]) = max(0, Z[1])
+```
 
-$Z^{[1]} \sim A^{[1]}$: Hidden layer matrix of shape (10, m)
+#### Output Layer
+```
+Z[2] = W[2] · A[1] + b[2]
+A[2] = Softmax(Z[2])
+```
 
-$W^{[1]}$: Weight matrix of shape (10, 784)
+### Backward Propagation (Gradients)
 
-$b^{[1]}$: Bias vector of shape (10, 1)
+```
+dZ[2] = A[2] - Y
+dW[2] = (1/m) · dZ[2] · A[1]T
+db[2] = (1/m) · Σ dZ[2]
 
-$Z^{[2]} \sim A^{[2]}$: Output layer matrix of shape (10, m)
+dZ[1] = (W[2]T · dZ[2]) ⊙ ReLU'(Z[1])
+dW[1] = (1/m) · dZ[1] · X.T
+db[1] = (1/m) · Σ dZ[1]
+```
 
-$W^{[2]}$: Weight matrix of shape (10, 10)
+### Parameter Updates
+```
+W := W - α · dW
+b := b - α · db
+```
 
-$b^{[2]}$: Bias vector of shape (10, 1)
+---
 
-$dZ^{[2]}$: Gradients of the output layer activations of shape (10, m)
+## 🚀 Getting Started
 
-$dW^{[2]}$: Gradients of the weight matrix $W^{[2]}$ of shape (10, 10)
+```bash
+pip install numpy matplotlib jupyter
 
-$db^{[2]}$: Gradients of the bias vector $b^{[2]}$ of shape (10, 1)
+# Clone repository
+git clone https://github.com/TirtheshJani/NN-with-math-and-numpy.git
+cd NN-with-math-and-numpy
 
-$dZ^{[1]}$: Gradients of the hidden layer activations of shape (10, m)
+jupyter notebook "NN from scratch wip.ipynb"
+```
 
-$dW^{[1]}$: Gradients of the weight matrix $W^{[1]}$ of shape (10, 784)
+---
 
-$db^{[1]}$: Gradients of the bias vector $b^{[1]}$ of shape (10, 1)
+## 📊 Variable Reference
+
+| Variable | Shape | Description |
+|----------|-------|-------------|
+| `X` | (784, m) | Input matrix (flattened 28x28 images) |
+| `W[1]` | (10, 784) | Hidden layer weights |
+| `b[1]` | (10, 1) | Hidden layer biases |
+| `A[1]` | (10, m) | Hidden layer activated output |
+| `W[2]` | (10, 10) | Output layer weights |
+| `b[2]` | (10, 1) | Output layer biases |
+| `A[2]` | (10, m) | Final predictions |
+| `Y` | (10, m) | One-hot encoded labels |
+
+---
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) file.
+
+---
+
+<p align="center">
+  <i>Master the fundamentals, build the future 🧠💻</i>
+</p>
