@@ -61,7 +61,7 @@ dataset_choice = st.sidebar.selectbox("Dataset", ["Moons", "Blobs", "XOR"])
 # Neural Network Class
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size, activation='relu'):
-        # Xavier initialization
+        # He initialization: W ~ N(0, sqrt(2/n_in)) — optimal for ReLU networks
         self.W1 = np.random.randn(hidden_size, input_size) * np.sqrt(2.0 / input_size)
         self.b1 = np.zeros((hidden_size, 1))
         self.W2 = np.random.randn(output_size, hidden_size) * np.sqrt(2.0 / hidden_size)
@@ -124,10 +124,11 @@ class NeuralNetwork:
         log_probs = -np.log(self.A2[Y.argmax(axis=0), range(m)] + 1e-8)
         return np.sum(log_probs) / m
     
-    def compute_accuracy(self, X, Y):
-        """Compute accuracy"""
-        predictions = self.forward(X)
-        pred_labels = np.argmax(predictions, axis=0)
+    def compute_accuracy(self, Y, A2=None):
+        """Compute accuracy using already-computed A2 (avoids overwriting stored state)."""
+        if A2 is None:
+            A2 = self.A2
+        pred_labels = np.argmax(A2, axis=0)
         true_labels = np.argmax(Y, axis=0)
         return np.mean(pred_labels == true_labels)
     
@@ -136,17 +137,17 @@ class NeuralNetwork:
         for epoch in range(epochs):
             # Forward pass
             output = self.forward(X)
-            
-            # Compute metrics
+
+            # Compute metrics (use stored A2, don't call forward again)
             loss = self.compute_loss(Y)
-            acc = self.compute_accuracy(X, Y)
-            
+            acc = self.compute_accuracy(Y, A2=output)
+
             self.history['loss'].append(loss)
             self.history['accuracy'].append(acc)
-            
+
             # Backward pass
             self.backward(X, Y, lr)
-        
+
         return self.history
 
 # Generate dataset
@@ -212,10 +213,10 @@ with tab1:
         st.plotly_chart(fig_pie, use_container_width=True)
 
 with tab2:
-    st.subheader("🧮 Mathematical Foundation")
-    
+    st.subheader("Mathematical Foundation")
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.markdown("**Forward Propagation**")
         st.markdown("""
@@ -223,36 +224,59 @@ with tab2:
         <b>Hidden Layer:</b><br>
         Z<sup>[1]</sup> = W<sup>[1]</sup> · X + b<sup>[1]</sup><br>
         A<sup>[1]</sup> = activation(Z<sup>[1]</sup>)<br><br>
-        
+
         <b>Output Layer:</b><br>
         Z<sup>[2]</sup> = W<sup>[2]</sup> · A<sup>[1]</sup> + b<sup>[2]</sup><br>
-        A<sup>[2]</sup> = softmax(Z<sup>[2]</sup>)
+        A<sup>[2]</sup> = softmax(Z<sup>[2]</sup>)<br><br>
+
+        <b>Softmax:</b><br>
+        a<sub>i</sub> = exp(z<sub>i</sub>) / Σ<sub>j</sub> exp(z<sub>j</sub>)
         </div>
         """, unsafe_allow_html=True)
-    
+
+        st.markdown("**Loss — Categorical Cross-Entropy**")
+        st.markdown("""
+        <div class="formula-box">
+        J = -(1/m) · Σ log(A<sup>[2]</sup><sub>c<sub>i</sub>,i</sub>)<br><br>
+        Penalizes confident wrong predictions heavily:<br>
+        -log(0.99) = 0.01 &nbsp; -log(0.01) = 4.61
+        </div>
+        """, unsafe_allow_html=True)
+
     with col2:
         st.markdown("**Backward Propagation**")
         st.markdown("""
         <div class="formula-box">
         <b>Output Gradients:</b><br>
         dZ<sup>[2]</sup> = A<sup>[2]</sup> - Y<br>
-        dW<sup>[2]</sup> = (1/m) · dZ<sup>[2]</sup> · A<sup>[1]T</sup><br><br>
-        
+        dW<sup>[2]</sup> = (1/m) · dZ<sup>[2]</sup> · A<sup>[1]T</sup><br>
+        db<sup>[2]</sup> = (1/m) · Σ dZ<sup>[2]</sup> (over samples)<br><br>
+
         <b>Hidden Gradients:</b><br>
         dZ<sup>[1]</sup> = (W<sup>[2]T</sup> · dZ<sup>[2]</sup>) ⊙ activation'(Z<sup>[1]</sup>)<br>
-        dW<sup>[1]</sup> = (1/m) · dZ<sup>[1]</sup> · X<sup>T</sup>
+        dW<sup>[1]</sup> = (1/m) · dZ<sup>[1]</sup> · X<sup>T</sup><br>
+        db<sup>[1]</sup> = (1/m) · Σ dZ<sup>[1]</sup> (over samples)
         </div>
         """, unsafe_allow_html=True)
-    
+
+        st.markdown("**Initialization — He Init**")
+        st.markdown("""
+        <div class="formula-box">
+        W ~ N(0, √(2/n<sub>in</sub>))<br>
+        b = 0<br><br>
+        √(2/n<sub>in</sub>) keeps signal variance stable across ReLU layers.
+        </div>
+        """, unsafe_allow_html=True)
+
     st.divider()
-    
-    st.subheader("🔄 Parameter Update (Gradient Descent)")
+
+    st.subheader("Parameter Update (Gradient Descent)")
     st.markdown("""
     <div class="formula-box" style="text-align: center; font-size: 1.2rem;">
     W := W - α · dW<br>
     b := b - α · db
     </div>
-    <p style="text-align: center;">where α (alpha) is the learning rate</p>
+    <p style="text-align: center;">where α (alpha) = learning rate — controls step size toward the loss minimum</p>
     """, unsafe_allow_html=True)
 
 with tab3:
@@ -362,7 +386,7 @@ with tab4:
         for epoch in range(n_epochs):
             output = nn.forward(X_train_t)
             loss = nn.compute_loss(Y_train)
-            acc = nn.compute_accuracy(X_train_t, Y_train)
+            acc = nn.compute_accuracy(Y_train, A2=output)
             nn.backward(X_train_t, Y_train, learning_rate)
             history['loss'].append(loss)
             history['accuracy'].append(acc)
@@ -378,7 +402,8 @@ with tab4:
         with col2:
             st.metric("Train Accuracy", f"{history['accuracy'][-1]*100:.1f}%")
         with col3:
-            test_acc = nn.compute_accuracy(X_test_t, Y_test)
+            test_output = nn.forward(X_test_t)
+            test_acc = nn.compute_accuracy(Y_test, A2=test_output)
             st.metric("Test Accuracy", f"{test_acc*100:.1f}%")
         
         # Training curves
